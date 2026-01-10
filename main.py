@@ -277,8 +277,9 @@ async def api_get_wrapped(request: Request):
     stats = calculate_wrapped_stats(favs)
     avg_rating = stats["average_rating"]
     
+    #testing comment
     return WrappedStats(
-        hours=stats["hours"],
+        hours=stats["hourss"],
         minutes=stats["minutes"],
         total_movies=stats["total_movies"],
         most_common_genre=stats["most_common_genre"],
