@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Movie Wrapped</title>
+  <link rel="stylesheet" href="/static/wrapped.css">
+</head>
+<body>
+
+{% set total_minutes = (hours * 60) + minutes %}
+{% set total_days = (total_minutes / 60) / 24 %}
+
+{# Message logic (NO JSON needed) #}
+{% if total_movies >= 50 %}
+  {% set tier_title = "PROFESSIONAL MOVIE WATCHER" %}
+  {% set tier_text  = "A list worthy of a museum." %}
+{% elif total_movies >= 40 %}
+  {% set tier_title = "MOVIE FANATIC!" %}
+  {% set tier_text  = "You got taste, and it SHOWS!" %}
+{% elif total_movies >= 30 %}
+  {% set tier_title = "Movies are your thing" %}
+  {% set tier_text  = "And nothing is going to stop you." %}
+{% elif total_movies >= 20 %}
+  {% set tier_title = "Intense watcher!" %}
+  {% set tier_text  = "This is definitely worth bragging about." %}
+{% elif total_movies >= 10 %}
+  {% set tier_title = "Casually Watching" %}
+  {% set tier_text  = "And this is only the beginning of your journey." %}
+{% elif total_movies >= 5 %}
+  {% set tier_title = "Still so much... to explore!" %}
+  {% set tier_text  = "You're missing out on PEAK cinema. Get out there and explore!" %}
+{% else %}
+  {% set tier_title = "Just getting started" %}
+  {% set tier_text  = "Every legend starts somewhere. Keep watching!" %}
+{% endif %}
+
+<div class="progress-dots" aria-hidden="true">
+  <span class="dot active"></span>
+  <span class="dot"></span>
+  <span class="dot"></span>
+  <span class="dot"></span>
+</div>
+
+<section class="slide slide-1" data-slide="1">
+  <div class="wave">
+    <span></span><span></span><span></span>
+  </div>
+
+  <div class="slide-content">
+    <p class="kicker reveal">Your Movie Wrapped</p>
+
+    <h1 class="reveal">
+      You watched <span class="accent count-up" data-to="{{ hours }}">{{ hours }}</span> hours of movies.
+    </h1>
+
+    <p class="sub reveal">
+      That’s about <span class="pill count-up-days" data-days="{{ '%.1f'|format(total_days) }}">{{ '%.1f'|format(total_days) }}</span> days.
+      <span class="muted">Dang.</span>
+    </p>
+
+    <p class="hint reveal">Scroll ↓</p>
+  </div>
+</section>
+
+<section class="slide slide-2" data-slide="2">
+  <div class="slide-content">
+    <p class="kicker reveal">Slide 2</p>
+
+    <h2 class="reveal">
+      And guess what? You watched
+      <span class="accent count-up" data-to="{{ total_movies }}">{{ total_movies }}</span> movies.
+    </h2>
+
+    <div class="tier-card reveal">
+      <h3 class="tier-title">{{ tier_title }}</h3>
+      <p class="tier-text">{{ tier_text }}</p>
+    </div>
+
+    <p class="hint reveal">Scroll ↓</p>
+  </div>
+</section>
+
+<section class="slide slide-3" data-slide="3">
+  <div class="slide-content">
+    <p class="kicker reveal">Slide 3</p>
+
+    <h2 class="reveal">Your top genre is:</h2>
+
+    <div class="genre-chip reveal">
+      {{ most_common_genre or "Unknown" }}
+    </div>
+
+    <p class="sub reveal">
+      This genre basically owns your watch history.
+    </p>
+  </div>
+</section>
+
+<section class="slide slide-4" data-slide="4">
+  <div class="slide-content">
+    <p class="kicker reveal">Taste check</p>
+
+    <h2 class="reveal">Your average IMDb rating:</h2>
+
+    {% if average_rating is not none %}
+      <div class="rating-big reveal">
+        <span class="pill pill-large">
+          <span class="accent">{{ average_rating }}</span><span class="muted">/10</span>
+        </span>
+      </div>
+
+      <p class="sub reveal">{{ taste_label }}</p>
+      <p class="sub reveal muted">Based on {{ rated_movies}} rated movies.</p>
+
+      <div class="rating-bar reveal" aria-hidden="true">
+        <div class="rating-fill" data-rating="{{ average_rating }}"></div>
+      </div>
+      
+    {% else %}
+      <p class="sub reveal">No IMDb ratings available yet.</p>
+      <p class="hint reveal"> Scroll ↓</p>
+    {% endif %}
+
+    <a class="back-btn reveal" href="/movies">Back to Movies</a>
+  </div>
+</section>
+
+<script src="/static/wrapped.js"></script>
+</body>
+</html>
+
