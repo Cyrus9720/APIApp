@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 2000);
     }
 
-    // ADD TO THE LIST 
+    // ADD TO THE LIST (via /api/favorites POST)
     addForms.forEach((form) => {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -33,16 +33,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const formData = new FormData(form);
 
             try {
-                const response = await fetch(form.action, {
+                const response = await fetch("/api/favorites", {
                     method: "POST",
-                    body: formData,
-                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    body: formData
                 });
 
                 if (response.ok) {
                     showToast("Movie added to your list");
                 } else {
-                    showToast("Error adding movie", "error");
+                    const data = await response.json();
+                    showToast(data.message || "Error adding movie", "error");
                 }
             } catch (err) {
                 console.error(err);
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // REMOVE MOVIE: 
+    // REMOVE MOVIE (via /api/favorites/{id} DELETE)
     removeForms.forEach((form) => {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -60,15 +60,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!card) return;
 
             const formData = new FormData(form);
+            const movieId = formData.get("id");
 
             // Instant fade out effect
             card.classList.add("fade-out");
 
             try {
-                const response = await fetch(form.action, {
-                    method: "POST",
-                    body: formData,
-                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                const response = await fetch(`/api/favorites/${movieId}`, {
+                    method: "DELETE"
                 });
 
                 if (response.ok) {

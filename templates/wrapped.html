@@ -8,33 +8,6 @@
 </head>
 <body>
 
-{% set total_minutes = (hours * 60) + minutes %}
-{% set total_days = (total_minutes / 60) / 24 %}
-
-{# Message logic (NO JSON needed) #}
-{% if total_movies >= 50 %}
-  {% set tier_title = "PROFESSIONAL MOVIE WATCHER" %}
-  {% set tier_text  = "A list worthy of a museum." %}
-{% elif total_movies >= 40 %}
-  {% set tier_title = "MOVIE FANATIC!" %}
-  {% set tier_text  = "You got taste, and it SHOWS!" %}
-{% elif total_movies >= 30 %}
-  {% set tier_title = "Movies are your thing" %}
-  {% set tier_text  = "And nothing is going to stop you." %}
-{% elif total_movies >= 20 %}
-  {% set tier_title = "Intense watcher!" %}
-  {% set tier_text  = "This is definitely worth bragging about." %}
-{% elif total_movies >= 10 %}
-  {% set tier_title = "Casually Watching" %}
-  {% set tier_text  = "And this is only the beginning of your journey." %}
-{% elif total_movies >= 5 %}
-  {% set tier_title = "Still so much... to explore!" %}
-  {% set tier_text  = "You're missing out on PEAK cinema. Get out there and explore!" %}
-{% else %}
-  {% set tier_title = "Just getting started" %}
-  {% set tier_text  = "Every legend starts somewhere. Keep watching!" %}
-{% endif %}
-
 <div class="progress-dots" aria-hidden="true">
   <span class="dot active"></span>
   <span class="dot"></span>
@@ -51,11 +24,11 @@
     <p class="kicker reveal">Your Movie Wrapped</p>
 
     <h1 class="reveal">
-      You watched <span class="accent count-up" data-to="{{ hours }}">{{ hours }}</span> hours of movies.
+      You watched <span class="accent count-up" id="hours-count" data-to="0">0</span> hours of movies.
     </h1>
 
     <p class="sub reveal">
-      That’s about <span class="pill count-up-days" data-days="{{ '%.1f'|format(total_days) }}">{{ '%.1f'|format(total_days) }}</span> days.
+      That's about <span class="pill count-up-days" id="days-count" data-days="0">0</span> days.
       <span class="muted">Dang.</span>
     </p>
 
@@ -69,12 +42,12 @@
 
     <h2 class="reveal">
       And guess what? You watched
-      <span class="accent count-up" data-to="{{ total_movies }}">{{ total_movies }}</span> movies.
+      <span class="accent count-up" id="movies-count" data-to="0">0</span> movies.
     </h2>
 
     <div class="tier-card reveal">
-      <h3 class="tier-title">{{ tier_title }}</h3>
-      <p class="tier-text">{{ tier_text }}</p>
+      <h3 class="tier-title" id="tier-title">Loading...</h3>
+      <p class="tier-text" id="tier-text"></p>
     </div>
 
     <p class="hint reveal">Scroll ↓</p>
@@ -87,8 +60,8 @@
 
     <h2 class="reveal">Your top genre is:</h2>
 
-    <div class="genre-chip reveal">
-      {{ most_common_genre or "Unknown" }}
+    <div class="genre-chip reveal" id="top-genre">
+      Loading...
     </div>
 
     <p class="sub reveal">
@@ -103,30 +76,153 @@
 
     <h2 class="reveal">Your average IMDb rating:</h2>
 
-    {% if average_rating is not none %}
-      <div class="rating-big reveal">
-        <span class="pill pill-large">
-          <span class="accent">{{ average_rating }}</span><span class="muted">/10</span>
-        </span>
-      </div>
+    <div class="rating-big reveal" id="rating-section">
+      <span class="pill pill-large">
+        <span class="accent" id="avg-rating">0</span><span class="muted">/10</span>
+      </span>
+    </div>
 
-      <p class="sub reveal">{{ taste_label }}</p>
-      <p class="sub reveal muted">Based on {{ rated_movies}} rated movies.</p>
+    <p class="sub reveal" id="taste-label"></p>
+    <p class="sub reveal muted" id="rated-count"></p>
 
-      <div class="rating-bar reveal" aria-hidden="true">
-        <div class="rating-fill" data-rating="{{ average_rating }}"></div>
-      </div>
-      
-    {% else %}
-      <p class="sub reveal">No IMDb ratings available yet.</p>
-      <p class="hint reveal"> Scroll ↓</p>
-    {% endif %}
+    <div class="rating-bar reveal" aria-hidden="true">
+      <div class="rating-fill" id="rating-fill" data-rating="0"></div>
+    </div>
 
     <a class="back-btn reveal" href="/movies">Back to Movies</a>
   </div>
 </section>
 
-<script src="/static/wrapped.js"></script>
+<script>
+// Fetch wrapped data via API
+async function loadWrapped() {
+    try {
+        const response = await fetch("/api/wrapped");
+        if (!response.ok) {
+            window.location.href = "/";
+            return;
+        }
+        const data = await response.json();
+        updateWrappedDisplay(data);
+        // Trigger animations after data is loaded
+        initWrappedAnimations();
+    } catch (err) {
+        console.error("Failed to load wrapped data:", err);
+    }
+}
+
+function updateWrappedDisplay(stats) {
+    const totalMinutes = (stats.hours * 60) + stats.minutes;
+    const totalDays = (totalMinutes / 60) / 24;
+    
+    // Calculate tier
+    let tierTitle, tierText;
+    const totalMovies = stats.total_movies;
+    if (totalMovies >= 50) {
+        tierTitle = "PROFESSIONAL MOVIE WATCHER";
+        tierText = "A list worthy of a museum.";
+    } else if (totalMovies >= 40) {
+        tierTitle = "MOVIE FANATIC!";
+        tierText = "You got taste, and it SHOWS!";
+    } else if (totalMovies >= 30) {
+        tierTitle = "Movies are your thing";
+        tierText = "And nothing is going to stop you.";
+    } else if (totalMovies >= 20) {
+        tierTitle = "Intense watcher!";
+        tierText = "This is definitely worth bragging about.";
+    } else if (totalMovies >= 10) {
+        tierTitle = "Casually Watching";
+        tierText = "And this is only the beginning of your journey.";
+    } else if (totalMovies >= 5) {
+        tierTitle = "Still so much... to explore!";
+        tierText = "You're missing out on PEAK cinema. Get out there and explore!";
+    } else {
+        tierTitle = "Just getting started";
+        tierText = "Every legend starts somewhere. Keep watching!";
+    }
+    
+    // Update DOM with data-to values for animation
+    document.getElementById("hours-count").dataset.to = stats.hours;
+    document.getElementById("days-count").dataset.days = totalDays.toFixed(1);
+    document.getElementById("days-count").textContent = totalDays.toFixed(1);
+    document.getElementById("movies-count").dataset.to = totalMovies;
+    document.getElementById("tier-title").textContent = tierTitle;
+    document.getElementById("tier-text").textContent = tierText;
+    document.getElementById("top-genre").textContent = stats.most_common_genre || "Unknown";
+    document.getElementById("avg-rating").textContent = stats.average_rating || 0;
+    document.getElementById("taste-label").textContent = stats.taste_label || "";
+    document.getElementById("rated-count").textContent = `Based on ${stats.rated_movies || 0} rated movies.`;
+    
+    const ratingFill = document.getElementById("rating-fill");
+    ratingFill.dataset.rating = stats.average_rating || 0;
+    ratingFill.style.width = `${Math.min(100, (stats.average_rating || 0) * 10)}%`;
+}
+
+// Inline animation code (runs after data is loaded)
+function initWrappedAnimations() {
+    const slides = document.querySelectorAll(".slide");
+    const dots = document.querySelectorAll(".dot");
+
+    function animateCount(el) {
+        const target = Number(el.dataset.to || "0");
+        if (el.dataset.done === "1") return;
+        el.dataset.done = "1";
+
+        const duration = 900;
+        const start = performance.now();
+
+        function tick(now) {
+            const p = Math.min((now - start) / duration, 1);
+            const value = Math.floor(target * p);
+            el.textContent = value;
+            if (p < 1) requestAnimationFrame(tick);
+            else el.textContent = target;
+        }
+        requestAnimationFrame(tick);
+    }
+
+    let lastActiveSlide = null;
+    let lastActiveDot = null;
+
+    function activateSlide(slide) {
+        if (lastActiveSlide === slide) return;
+
+        if (lastActiveSlide) lastActiveSlide.classList.remove("is-active");
+        slide.classList.add("is-active");
+        lastActiveSlide = slide;
+
+        const idx = Number(slide.dataset.slide) - 1;
+        if (lastActiveDot) lastActiveDot.classList.remove("active");
+        if (dots[idx]) {
+            dots[idx].classList.add("active");
+            lastActiveDot = dots[idx];
+        }
+
+        slide.querySelectorAll(".count-up").forEach(animateCount);
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                activateSlide(entry.target);
+            }
+        });
+    }, { threshold: 0.6 });
+
+    slides.forEach(slide => observer.observe(slide));
+
+    if (slides[0]) activateSlide(slides[0]);
+
+    // Set rating bar
+    document.querySelectorAll(".rating-fill").forEach((bar) => {
+        const rating = parseFloat(bar.dataset.rating);
+        if (Number.isFinite(rating)) {
+            bar.style.width = `${Math.min(100, rating * 10)}%`;
+        }
+    });
+}
+
+loadWrapped();
+</script>
 </body>
 </html>
-

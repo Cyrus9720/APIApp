@@ -15,76 +15,157 @@
         <a href="/logout" class="logout-btn">Logout</a>
     </div>
 
-    {% if favorites %}
-        <div class="sort-controls">
-            <label for="sort-dropdown"><strong>Sort by:</strong></label>
-            <select id="sort-dropdown" class="search-type" onchange="changeSortOrder(this.value)">
-                <option value="added" {% if sort_by == 'added' %}selected{% endif %}>Added to List</option>
-                <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Rating</option>
-                <option value="release" {% if sort_by == 'release' %}selected{% endif %}>Release Date</option>
-            </select>
-            <button id="reverse-btn" class="reverse-btn" onclick="toggleReverse()" title="Reverse sort order">
-                {% if reverse_sort %}↓{% else %}↑{% endif %}
-            </button>
-        </div>
+    <div id="sort-controls" class="sort-controls" style="display: none;">
+        <label for="sort-dropdown"><strong>Sort by:</strong></label>
+        <select id="sort-dropdown" class="search-type">
+            <option value="added">Added to List</option>
+            <option value="rating">Rating</option>
+            <option value="release">Release Date</option>
+        </select>
+        <button id="reverse-btn" class="reverse-btn" title="Reverse sort order">↑</button>
+    </div>
 
-        <div class="results">
-            {% for movie in favorites %}
-                <div class="movie-card">
-                    {% if movie.poster_url %}
-                        <img src="{{ movie.poster_url }}" alt="{{ movie.title }} poster">
-                    {% else %}
-                        <div class="no-poster">No poster</div>
-                    {% endif %}
-                    <div class="movie-info">
-                        <h2>{{ movie.title }}</h2>
-                        <p><strong>Release:</strong> {{ movie.release_date or "Unknown" }}</p>
-                        <p><strong>Director:</strong> {{ movie.director or "Unknown" }}</p>
-                        <p><strong>Rating:</strong> {{ "%.1f"|format(movie.rating) }}</p>
-                        {% if movie.runtime %}
-                            <p><strong>Runtime:</strong> {{ movie.runtime|format_runtime }}</p>
-                        {% endif %}
-                        {% if movie.genres %}
-                            <p><strong>Genres:</strong> {{ movie.genres|join(", ") }}</p>
-                        {% endif %}
-
-                        <form method="post"
-                              action="/remove_favorite"
-                              class="remove-from-list-form">
-                            <input type="hidden" name="id" value="{{ movie.id }}">
-                            <input type="hidden" name="title" value="{{ movie.title }}">
-                            <input type="hidden" name="poster_url" value="{{ movie.poster_url }}">
-                            <input type="hidden" name="release_date" value="{{ movie.release_date }}">
-                            <input type="hidden" name="rating" value="{{ movie.rating }}">
-                            <button type="submit" class="remove-btn">
-                                Remove
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p>You have no movies in your list yet. Go ahead and add some!</p>
-    {% endif %}
+    <div id="results" class="results"></div>
+    <p id="empty-message" style="display: none;">You have no movies in your list yet. Go ahead and add some!</p>
 </div>
 
 <div id="toast-container" class="toast-container"></div>
 
 <script>
-function changeSortOrder(sortValue) {
-    const reverse = new URLSearchParams(window.location.search).get("reverse") === "true";
-    window.location.href = "/my_list?sort=" + sortValue + "&reverse=" + reverse;
+let allFavorites = [];
+let currentSort = "added";
+let reverseSort = false;
+
+// Helper: format runtime
+function formatRuntime(minutes) {
+    if (!minutes) return "Unknown";
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h === 0) return `${m} min`;
+    if (m === 0) return `${h} h`;
+    return `${h} h ${m} min`;
 }
 
-function toggleReverse() {
-    const params = new URLSearchParams(window.location.search);
-    const currentSort = params.get("sort") || "added";
-    const currentReverse = params.get("reverse") === "true";
-    window.location.href = "/my_list?sort=" + currentSort + "&reverse=" + (!currentReverse);
+// Toast notification
+function showToast(message, type = "info") {
+    const container = document.getElementById("toast-container");
+    container.innerHTML = "";
+    const toast = document.createElement("div");
+    toast.classList.add("toast", `toast-${type}`);
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 200);
+    }, 2000);
 }
+
+// Sort favorites
+function sortFavorites(favorites) {
+    let sorted = [...favorites];
+    if (currentSort === "rating") {
+        sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (currentSort === "release") {
+        sorted.sort((a, b) => (b.release_date || "").localeCompare(a.release_date || ""));
+    }
+    // "added" keeps original order
+    if (reverseSort) sorted.reverse();
+    return sorted;
+}
+
+// Render movie cards
+function renderFavorites() {
+    const resultsDiv = document.getElementById("results");
+    const emptyMessage = document.getElementById("empty-message");
+    const sortControls = document.getElementById("sort-controls");
+    
+    if (!allFavorites || allFavorites.length === 0) {
+        resultsDiv.innerHTML = "";
+        emptyMessage.style.display = "block";
+        sortControls.style.display = "none";
+        return;
+    }
+    
+    emptyMessage.style.display = "none";
+    sortControls.style.display = "flex";
+    
+    const sorted = sortFavorites(allFavorites);
+    
+    resultsDiv.innerHTML = sorted.map(movie => `
+        <div class="movie-card" data-id="${movie.id}">
+            ${movie.poster_url 
+                ? `<img src="${movie.poster_url}" alt="${movie.title} poster">`
+                : `<div class="no-poster">No poster</div>`}
+            <div class="movie-info">
+                <h2>${movie.title}</h2>
+                <p><strong>Release:</strong> ${movie.release_date || "Unknown"}</p>
+                <p><strong>Director:</strong> ${movie.director || "Unknown"}</p>
+                <p><strong>Rating:</strong> ${movie.rating ? movie.rating.toFixed(1) : "N/A"}</p>
+                ${movie.runtime ? `<p><strong>Runtime:</strong> ${formatRuntime(movie.runtime)}</p>` : ""}
+                ${movie.genres && movie.genres.length ? `<p><strong>Genres:</strong> ${movie.genres.join(", ")}</p>` : ""}
+                <button class="remove-btn" data-id="${movie.id}">Remove</button>
+            </div>
+        </div>
+    `).join("");
+    
+    // Attach click handlers for remove buttons
+    resultsDiv.querySelectorAll(".remove-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const movieId = btn.dataset.id;
+            const card = btn.closest(".movie-card");
+            card.classList.add("fade-out");
+            
+            try {
+                const response = await fetch(`/api/favorites/${movieId}`, {
+                    method: "DELETE"
+                });
+                if (response.ok) {
+                    allFavorites = allFavorites.filter(m => m.id != movieId);
+                    setTimeout(() => renderFavorites(), 200);
+                    showToast("Movie removed!");
+                } else {
+                    card.classList.remove("fade-out");
+                    showToast("Error removing movie", "error");
+                }
+            } catch (err) {
+                card.classList.remove("fade-out");
+                showToast("Network error", "error");
+            }
+        });
+    });
+}
+
+// Fetch favorites via API
+async function loadFavorites() {
+    try {
+        const response = await fetch("/api/favorites");
+        if (response.ok) {
+            const data = await response.json();
+            allFavorites = data.favorites;
+            renderFavorites();
+        } else {
+            showToast("Failed to load favorites", "error");
+        }
+    } catch (err) {
+        showToast("Network error", "error");
+    }
+}
+
+// Sort controls
+document.getElementById("sort-dropdown").addEventListener("change", (e) => {
+    currentSort = e.target.value;
+    renderFavorites();
+});
+
+document.getElementById("reverse-btn").addEventListener("click", () => {
+    reverseSort = !reverseSort;
+    document.getElementById("reverse-btn").textContent = reverseSort ? "↓" : "↑";
+    renderFavorites();
+});
+
+// Load on page load
+loadFavorites();
 </script>
-
-<script src="/static/script.js"></script>
 </body>
 </html>

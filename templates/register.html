@@ -54,6 +54,37 @@
     </div>
 </section>
 
+<script>
+document.querySelector('.auth-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    
+    const password = formData.get('password');
+    const confirm = formData.get('confirm');
+    
+    if (password !== confirm) {
+        alert('Passwords do not match');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            window.location.href = '/movies';
+        } else {
+            const data = await response.json();
+            alert(data.detail || 'Registration failed');
+        }
+    } catch (err) {
+        alert('Network error');
+    }
+});
+</script>
 </body>
 </html>
 

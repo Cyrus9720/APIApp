@@ -48,7 +48,28 @@
         </div>
     </div>
 </section>
-
-</body>
+<script>
+document.querySelector('.auth-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            window.location.href = '/movies';
+        } else {
+            const data = await response.json();
+            alert(data.detail || 'Invalid credentials');
+        }
+    } catch (err) {
+        alert('Network error');
+    }
+});
+</script></body>
 </html>
 
