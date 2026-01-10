@@ -18,7 +18,7 @@ app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "hemlig
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# 3. Register filter (format_runtime) to Jinja2
+# 3. Register filter (format_runtime) to Jinja2§
 def format_runtime(minutes):
     if not minutes: return "Unknown"
     m = int(minutes)
@@ -197,9 +197,9 @@ async def api_get_wrapped(request: Request):
         total_movies=stats["total_movies"],
         most_common_genre=stats["most_common_genre"],
         average_rating=avg_rating,
-        taste_label="You are a true connoisseur, hats off good man!" if avg_rating > 8.5 
-        else  "You have good taste" if avg_rating > 6.5 else "I see you watch most things" 
-        if avg_rating > 4.5 else "Bro, what are you watching?",
+        taste_label="You are a true connoisseur, hats off good man!" if avg_rating >= 8.5 
+        else  "You have good taste" if avg_rating >= 6.5 else "I see you watch most things" 
+        if avg_rating >= 4.5 else "Bro, what are you watching?",
         rated_movies=stats["rated_movies"]
     )
 
