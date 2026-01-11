@@ -6,7 +6,6 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware 
-
 from models import Movie, User, WrappedStats
 from services import load_users, save_users, get_user, update_user_favorites, search_movies, calculate_wrapped_stats
 
@@ -14,11 +13,11 @@ app = FastAPI()
 
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "hemlig-nyckel"), max_age=3600)
 
-# 2. Setup Static files & Templates
+# Setup Static files & Templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# 3. Register filter (format_runtime) to Jinja2§
+# Register filter (format_runtime) to Jinja2
 def format_runtime(minutes):
     if not minutes: return "Unknown"
     m = int(minutes)
@@ -38,7 +37,6 @@ def get_current_user(request: Request):
     return get_user(username)
 
 # --- ROUTES: PAGES (Return HTML) ---
-
 @app.get("/")
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -80,10 +78,9 @@ def wrapped_page(request: Request):
     return templates.TemplateResponse("wrapped.html", {"request": request})
 
 # --- JSON API ENDPOINTS ---
-
 @app.get("/api/search")
 async def api_search_movies(q: str = "", type: str = "film"):
-    """Search movies via API. type can be 'film' or 'director'"""
+    """Search movies via external API query. based on film name or director name, realizes GET /api/search"""
     if not q:
         return {"movies": []}
     
@@ -92,7 +89,7 @@ async def api_search_movies(q: str = "", type: str = "film"):
 
 @app.post("/api/register")
 async def api_register(request: Request, username: str = Form(...), password: str = Form(...)):
-    """Register new user via API"""
+    """Register new user with username & password, realizes POST /api/register"""
     if get_user(username):
         raise HTTPException(400, "User already exists")
     
@@ -105,7 +102,7 @@ async def api_register(request: Request, username: str = Form(...), password: st
 
 @app.post("/api/login")
 async def api_login(request: Request, username: str = Form(...), password: str = Form(...)):
-    """Loggin via API"""
+    """Loggin a specific user with username & password, realizes POST /api/login"""
     user = get_user(username)
     if not user or user.password != password:
         raise HTTPException(401, "Invalid credentials")
@@ -115,7 +112,7 @@ async def api_login(request: Request, username: str = Form(...), password: str =
 
 @app.get("/api/favorites")
 async def api_get_favorites(request: Request):
-    """Get user's favorites via API"""
+    """Get user's favorites list, realizes GET /api/favorites"""
     user = get_current_user(request)
     if not user:
         raise HTTPException(401, "Not authenticated")
@@ -133,7 +130,7 @@ async def api_add_favorite(
     runtime: int = Form(0),
     genres: str = Form("")
 ):
-    """Add favorite via API"""
+    """Add movie favorite list, realizes POST /api/favorites"""
     user = get_current_user(request)
     if not user:
         raise HTTPException(401, "Not authenticated")
@@ -160,7 +157,7 @@ async def api_add_favorite(
 
 @app.delete("/api/favorites/{movie_id}")
 async def api_remove_favorite(request: Request, movie_id: int):
-    """Remove favorite via API"""
+    """Remove favorite from list, realizes DELETE /api/favorites/{movie_id}"""
     user = get_current_user(request)
     if not user:
         raise HTTPException(401, "Not authenticated")
@@ -171,7 +168,7 @@ async def api_remove_favorite(request: Request, movie_id: int):
 
 @app.get("/api/wrapped")
 async def api_get_wrapped(request: Request):
-    """Get wrapped statistics via API"""
+    """Get wrapped statistics based on movies in list, relizes GET /api/wrapped"""
     user = get_current_user(request)
     if not user:
         raise HTTPException(401, "Not authenticated")
