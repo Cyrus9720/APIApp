@@ -17,7 +17,6 @@ class User(BaseModel):
     username: str
     password: str
     favorites: List[Movie] = []
-    
     model_config = ConfigDict(from_attributes=True)
 
 class WrappedStats(BaseModel):
