@@ -1,7 +1,15 @@
-Requires fastapi and unicron
+Requires `fastapi` and `uvicorn`.
 
-In terminal. 
-To activate virtual enviornment: ./venv/bin/uvicorn main:app --reload
-To activate server: uvicorn main:app --reload
-To close server: ctrl c
-To deactivate virtual enviornment: deactivate
+In terminal:
+
+- Activate virtual environment:
+	- `source venv/bin/activate`
+- Start server:
+	- `uvicorn main:app --reload`
+
+Or, without activating the venv:
+
+- `./venv/bin/uvicorn main:app --reload`
+
+To close server: Ctrl+C
+To deactivate virtual environment: `deactivate`
