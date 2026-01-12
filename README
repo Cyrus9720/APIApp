@@ -1,15 +1,32 @@
-Requires `fastapi` and `uvicorn`.
+Requirements:
+Python 3
+fastapi
+uvicorn
+python-dotenv
+httpx
 
-In terminal:
+Setup:
+Create virtual environment:
+python -m venv venv
 
-- Activate virtual environment:
-	- `source venv/bin/activate`
-- Start server:
-	- `uvicorn main:app --reload`
+Activate virtual environment:
+Windows:
+venv\Scripts\activate
 
-Or, without activating the venv:
+macOS/Linux:
+source venv/bin/activate
 
-- `./venv/bin/uvicorn main:app --reload`
+Install:
+pip install fastapi uvicorn python-dotenv httpx
 
-To close server: Ctrl+C
-To deactivate virtual environment: `deactivate`
+Run application:
+uvicorn main:app --reload
+
+Open in browser:
+http://127.0.0.1:8000/
+
+Stop server:
+Ctrl + C
+
+Deactivate environment:
+deactivate
