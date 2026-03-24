@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Surprise Me</title>
+    <link rel="stylesheet" href="/static/surprise.css">
+</head>
+<body>
+
+<div class="surprise-container">
+
+    <!-- Header text (genre-based message??????????? static if I can't figure it out) -->
+    <h1 id="surprise-header" class="fade"></h1>
+    <!-- Static version: gonna remove if above doesn't work.''-->
+     <h1>Surprise:</h1>
+    <h2>Here's your next watch! Enjoy!</h2>
+
+    <!-- Movie card -->
+    <div id="surprise-movie" class="movie-card fade"></div>
+
+    <!-- Fallback message -->
+    <p id="no-wrapped" class="fallback-message" style="display: none;">
+        No movies! Come back when you are ready.
+    </p>
+
+    <a href="/movies" class="back-btn">Back to Movies</a>
+</div>
+
+<script src="/static/surprise.js"></script>
+</body>
+</html>
