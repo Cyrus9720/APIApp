@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware 
 from models import Movie, User, WrappedStats
-from services import load_users, save_users, get_user, update_user_favorites, search_movies, calculate_wrapped_stats
+from services import load_users, save_users, get_user, update_user_favorites, search_movies, calculate_wrapped_stats, search_movies_by_genre_async
 
 app = FastAPI()
 
@@ -199,6 +199,53 @@ async def api_get_wrapped(request: Request):
         if avg_rating >= 4.5 else "Bro, what are you watching?",
         rated_movies=stats["rated_movies"]
     )
+
+@app.get("/api/surprise")
+async def api_surprise(request: Request):
+    """
+    Ensures surprise kicks in if user is logged in AND wrapped even exists.
+    """
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(401, "Not authenticated")
+
+    # No surprise if there is no added movies
+    if not user.favorites:
+        return {"status": "no_wrapped"}
+
+    # Reusing wrapped logic
+    stats = calculate_wrapped_stats(user.favorites)
+    top_genre = stats.get("most_common_genre")
+
+    if not top_genre:
+        return {"status": "no_wrapped"}
+
+    # get genre
+    movies = await search_movies_by_genre_async(top_genre)
+
+    if not movies:
+        return {"status": "no_results", "top_genre": top_genre}
+
+    # one random for surprise
+    import random
+    movie = random.choice(movies)
+
+    return {
+        "status": "ok",
+        "top_genre": top_genre,
+        "movie": movie.model_dump()
+    }
+
+@app.get("/surprise")
+def surprise_page(request: Request):
+    """
+    Function to ensure that surprise.html can be accessed upon login as existing user.
+    If not, boot back to /.
+    """
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse("/")
+    return templates.TemplateResponse("surprise.html", {"request": request})
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)

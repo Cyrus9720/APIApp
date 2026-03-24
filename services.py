@@ -12,6 +12,72 @@ BASE_URL = "https://api.themoviedb.org/3"
 OMDB_API_KEY = os.getenv("OMDB_API_KEY")
 DB_FILE = "users.json"
 
+
+# --- MAP FOR GENRE (LET THIS BE AT THE TOP, PLEASE) ---
+
+GENRE_MAP = {
+    "Action": 28,
+    "Adventure": 12,
+    "Animation": 16,
+    "Comedy": 35,
+    "Crime": 80,
+    "Documentary": 99,
+    "Drama": 18,
+    "Family": 10751,
+    "Fantasy": 14,
+    "History": 36,
+    "Horror": 27,
+    "Music": 10402,
+    "Mystery": 9648,
+    "Romance": 10749,
+    "Science Fiction": 878,
+    "TV Movie": 10770,
+    "Thriller": 53,
+    "War": 10752,
+    "Western": 37
+
+}
+
+async def search_movies_by_genre_async(genre_name: str) -> List[Movie]:
+    """
+    This is for fetching movies from tmbd based on the genre name.
+    """
+    genre_id = GENRE_MAP.get(genre_name)
+    if not genre_id:
+        return []
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            f"{BASE_URL}/discover/movie",
+            params={
+                "api_key": API_KEY,
+                "with_genres": genre_id,
+                "sort_by": "popularity.desc"
+            }
+        )
+
+        if resp.status_code != 200:
+            return []
+
+        results = resp.json().get("results", [])[:20]
+        movies = []
+
+        for item in results:
+            details = await fetch_movie_details(client, item["id"])
+
+            movies.append(Movie(
+                id=item["id"],
+                title=item["title"],
+                release_date=item.get("release_date", "Unknown"),
+                rating=details.get("imdbRating") or item.get("vote_average", 0),
+                poster_url=f"https://image.tmdb.org/t/p/w342{item['poster_path']}" if item.get("poster_path") else None,
+                runtime=details.get("runtime", 0) or 0,
+                genres=[g["name"] for g in details.get("genres", [])],
+                director=details.get("director"),
+            ))
+
+        return movies
+
 # --- DATABASE ---
 def load_users() -> List[User]:
     if not os.path.exists(DB_FILE):
