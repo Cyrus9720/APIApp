@@ -77,6 +77,17 @@ def wrapped_page(request: Request):
     
     return templates.TemplateResponse("wrapped.html", {"request": request})
 
+@app.get("/duel")
+def duel_page(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse("/")
+
+    return templates.TemplateResponse("duel.html", {
+        "request": request,
+        "username": user.username
+    })
+
 # --- JSON API ENDPOINTS ---
 @app.get("/api/search")
 async def api_search_movies(q: str = "", type: str = "film"):
@@ -199,6 +210,43 @@ async def api_get_wrapped(request: Request):
         if avg_rating >= 4.5 else "Bro, what are you watching?",
         rated_movies=stats["rated_movies"]
     )
+
+@app.get("/api/duel")
+async def api_duel(request: Request):
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(401, "Not authenticated")
+
+    if not user.favorites:
+        return {"status": "no_favorites"}
+
+    stats = calculate_wrapped_stats(user.favorites)
+    top_genre = stats.get("most_common_genre")
+
+    if not top_genre:
+        return {"status": "no_genre"}
+
+    movies = await search_movies_by_genre_async(top_genre)
+
+    if not movies or len(movies) < 2:
+        return {"status": "not_enough_movies"}
+
+    # remove movies that are already in user's favorites
+    favorite_ids = [movie.id for movie in user.favorites]
+    movies = [movie for movie in movies if movie.id not in favorite_ids]
+
+    if len(movies) < 2:
+        return {"status": "not_enough_movies"}
+
+    import random
+    picked = random.sample(movies, 2)
+
+    return {
+        "status": "ok",
+        "top_genre": top_genre,
+        "movie1": picked[0].model_dump(),
+        "movie2": picked[1].model_dump()
+    }
 
 @app.get("/api/surprise")
 async def api_surprise(request: Request):
