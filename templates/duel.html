@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movie Duel</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+    <h1>Movie Duel</h1>
+
+    <div class="user-bar">
+        <span class="user-label">Logged in as <strong>{{ username }}</strong></span>
+        <a href="/movies" class="logout-btn">Backto search</a>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+
+    <p class="duel-subtitle">Pick the movie you like more</p>
+
+    <div id="duel-container" class="duel-container">
+        <div class="movie-card duel-card" id="movie1">
+            <div class="no-poster">Loading...</div>
+        </div>
+
+        <div class="movie-card duel-card" id="movie2">
+            <div class="no-poster">Loading...</div>
+        </div>
+    </div>
+
+    <p id="duel-message" class="duel-message"></p>
+</div>
+
+<script src="/static/duel.js"></script>
+</body>
+</html>

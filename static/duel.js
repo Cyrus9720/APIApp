@@ -1,0 +1,1 @@
+console.log("duel page loaded");
