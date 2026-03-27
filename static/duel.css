@@ -1,0 +1,56 @@
+.duel-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.duel-card {
+  width: 320px;
+  max-width: 100%;
+}
+
+.duel-card img,
+.duel-card .no-poster {
+  height: 420px;
+  object-fit: cover;
+}
+
+.duel-subtitle {
+  text-align: center;
+  color: #cbd5e1;
+  margin-bottom: 10px;
+}
+
+.duel-message {
+  text-align: center;
+  color: #94a3b8;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.duel-final {
+  justify-content: center;
+}
+
+.duel-final #movie2 {
+  display: none;
+}
+
+.winner-card {
+  border: 2px solid #38bdf8;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+}
+
+.winner-label {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #7dd3fc;
+  font-weight: 600;
+  font-size: 14px;
+}

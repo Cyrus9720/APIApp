@@ -79,6 +79,8 @@ def wrapped_page(request: Request):
 
 @app.get("/duel")
 def duel_page(request: Request):
+    """checks if the user is logged in, if not, redirects to the login page.
+    if the user is authenticated, returns the duel.html template with the username"""
     user = get_current_user(request)
     if not user:
         return RedirectResponse("/")
@@ -213,6 +215,11 @@ async def api_get_wrapped(request: Request):
 
 @app.get("/api/duel")
 async def api_duel(request: Request):
+    """
+    generates movies for the duel feature. 
+    finds the users top genre from their lists, fetches movies from
+    the external api, filters out saved movies and returns 6 random ones for the duel rounds.
+    """
     user = get_current_user(request)
     if not user:
         raise HTTPException(401, "Not authenticated")
@@ -235,17 +242,16 @@ async def api_duel(request: Request):
     favorite_ids = [movie.id for movie in user.favorites]
     movies = [movie for movie in movies if movie.id not in favorite_ids]
 
-    if len(movies) < 2:
+    if len(movies) < 6:
         return {"status": "not_enough_movies"}
 
     import random
-    picked = random.sample(movies, 2)
+    picked = random.sample(movies, 6)
 
     return {
         "status": "ok",
         "top_genre": top_genre,
-        "movie1": picked[0].model_dump(),
-        "movie2": picked[1].model_dump()
+        "movies": [movie.model_dump() for movie in picked]
     }
 
 @app.get("/api/surprise")
