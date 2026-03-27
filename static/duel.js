@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const data = await response.json();
         // if api didnt return ok, show msg
         if (data.status !== "ok") {
-            messageEl.textContent = "Could not load duel right now.";
+            messageEl.textContent = "Could not load duel right now, add movies to your list.";
             return;
         }
 
