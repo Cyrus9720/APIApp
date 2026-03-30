@@ -13,6 +13,7 @@
   <span class="dot"></span>
   <span class="dot"></span>
   <span class="dot"></span>
+  <span class="dot"></span>
 </div>
 
 <section class="slide slide-1" data-slide="1">
@@ -71,6 +72,24 @@
 </section>
 
 <section class="slide slide-4" data-slide="4">
+  <div class="slide-content">
+    <p class="kicker-reveal">Slide 4</p>
+
+    <h2 class="reveal">Your most watched decade:</h2>
+
+    <div class="genre-chip reveal" id="top-decade">
+      Loading...
+    </div>
+
+    <p class="sub reveal">
+      This is the era you keep coming back to:
+    </p>
+    
+    <div class="sub reveal" id="decade-breakdown"></div>
+  </div>
+</section>
+
+<section class="slide slide-5" data-slide="5">
   <div class="slide-content">
     <p class="kicker reveal">Taste check</p>
 
@@ -152,7 +171,21 @@ function updateWrappedDisplay(stats) {
     document.getElementById("avg-rating").textContent = stats.average_rating || 0;
     document.getElementById("taste-label").textContent = stats.taste_label || "";
     document.getElementById("rated-count").textContent = `Based on ${stats.rated_movies || 0} rated movies.`;
-    
+    document.getElementById("top-decade").textContent = stats.top_decade || "No data";
+
+    const decadeContainer = document.getElementById("decade-breakdown");
+    decadeContainer.innerHTML = "";
+
+    if (stats.decade_breakdown) {
+      Object.entries(stats.decade_breakdown)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([decade, count]) => {
+          const p = document.createElement("p");
+          p.textContent = `${decade}: ${count} movies`;
+          decadeContainer.appendChild(p);
+        });
+    }
+
     const ratingFill = document.getElementById("rating-fill");
     ratingFill.dataset.rating = stats.average_rating || 0;
     ratingFill.style.width = `${Math.min(100, (stats.average_rating || 0) * 10)}%`;

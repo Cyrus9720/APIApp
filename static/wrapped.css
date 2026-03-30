@@ -101,6 +101,12 @@ h2 { font-size: clamp(28px, 4vw, 48px); }
               #020617;
 }
 
+.slide-5 {
+  background: radial-gradient(900px 650px at 40% 25%, rgba(34,197,94,0.12), transparent 60%),
+              radial-gradient(900px 650px at 70% 35%, rgba(56,189,248,0.12), transparent 60%),
+              #020617;
+}
+
 /* IMDb rating block */
 .rating-big {
   margin-top: 14px;

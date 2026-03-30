@@ -27,3 +27,5 @@ class WrappedStats(BaseModel):
     most_common_genre: Optional[str] = None
     taste_label: Optional[str] = None
     rated_movies: int = 0
+    top_decade: Optional[str] = None
+    decade_breakdown: dict = {}

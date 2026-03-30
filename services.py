@@ -249,6 +249,29 @@ def calculate_wrapped_stats(favorites: List[Movie]) -> dict:
     top_genre = most_common[0][0] if most_common else "Unknown"
     
     avg_rating = sum(m.rating for m in favorites) / len(favorites)
+
+    decades = {}
+
+    for movie in favorites:
+        release_date = movie.release_date
+        print("TITLE:", movie.title)
+        print("RELEASE_DATE:", release_date)
+
+        if not release_date:
+            continue
+
+        try:
+            year = int(str(release_date)[:4])
+        except (ValueError, TypeError):
+            continue
+
+        decade = (year // 10) * 10
+        label = f"{decade}s"
+        decades[label] = decades.get(label, 0) + 1
+
+    print("DECADES:", decades)
+
+    top_decade = max(decades, key=decades.get) if decades else None
     
     return {
         "hours": total_minutes // 60,
@@ -256,5 +279,7 @@ def calculate_wrapped_stats(favorites: List[Movie]) -> dict:
         "total_movies": len(favorites),
         "most_common_genre": top_genre,
         "average_rating": round(avg_rating, 1),
-        "rated_movies": len(favorites)
+        "rated_movies": len(favorites),
+        "top_decade": top_decade,
+        "decade_breakdown": decades
     }

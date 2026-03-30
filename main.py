@@ -195,7 +195,9 @@ async def api_get_wrapped(request: Request):
             most_common_genre=None,
             average_rating=0,
             taste_label="No movies yet",
-            rated_movies=0
+            rated_movies=0,
+            top_decade=None,
+            decade_breakdown={}
         )
     
     stats = calculate_wrapped_stats(favs)
@@ -210,7 +212,9 @@ async def api_get_wrapped(request: Request):
         taste_label="You are a true connoisseur, hats off good man!" if avg_rating >= 8.5 
         else  "You have good taste" if avg_rating >= 6.5 else "I see you watch most things" 
         if avg_rating >= 4.5 else "Bro, what are you watching?",
-        rated_movies=stats["rated_movies"]
+        rated_movies=stats["rated_movies"],
+        top_decade=stats["top_decade"],
+        decade_breakdown=stats["decade_breakdown"]
     )
 
 @app.get("/api/duel")
